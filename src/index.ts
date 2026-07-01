@@ -89,7 +89,7 @@ const tools: McpToolExport['tools'] = [
   },
   {
     name: 'search_notes',
-    description: 'Full-text search across notes.',
+    description: 'Full-text search across OpenReview notes (papers, reviews, decisions) by query string; optionally restrict to a content field (e.g. title, abstract) or filter by author signature; returns matching note ids, titles, and venues.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -108,13 +108,17 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<un
   const apiKey = (args._apiKey as string | undefined)?.trim();
   switch (name) {
     case 'list_venues': {
-      const params = new URLSearchParams({
-        prefix: '~',
-        limit: String(Math.min(1000, Math.max(1, (args.limit as number) ?? 50))),
-        offset: String(Math.max(0, (args.offset as number) ?? 0)),
-      });
-      if (args.query) params.set('regex', String(args.query));
-      return orGet(apiKey, `/groups?${params}`);
+      // The canonical anonymous-accessible venue list is the members array
+      // of the "venues" group (~4000 conferences/workshops).
+      const data = (await orGet(apiKey, `/groups?id=venues`)) as {
+        groups?: { members?: string[] }[];
+      };
+      const all = data.groups?.[0]?.members ?? [];
+      const query = (args.query as string | undefined)?.toLowerCase();
+      const filtered = query ? all.filter((id) => id.toLowerCase().includes(query)) : all;
+      const offset = Math.max(0, (args.offset as number) ?? 0);
+      const limit = Math.min(1000, Math.max(1, (args.limit as number) ?? 50));
+      return { total: filtered.length, venues: filtered.slice(offset, offset + limit) };
     }
     case 'get_venue':
       return orGet(apiKey, `/groups?id=${encodeURIComponent(reqStr(args, 'group_id', '"ICLR.cc/2024/Conference"'))}`);
@@ -161,7 +165,10 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<un
 
 async function orGet(apiKey: string | undefined, path: string) {
   const url = `${BASE}${path}`;
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  // A descriptive User-Agent — OpenReview's edge (Cloudflare) 403s the default
+  // Workers fetch UA, which surfaced as "unauthorized" from the gateway even
+  // though the endpoint is anonymous (works fine with a UA).
+  const headers: Record<string, string> = { Accept: 'application/json', 'User-Agent': 'pipeworx-mcp-openreview/1.0 (+https://pipeworx.io)' };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
   const res = await fetch(url, { headers });
   if (res.status === 401 || res.status === 403) throw new Error('OpenReview: unauthorized');

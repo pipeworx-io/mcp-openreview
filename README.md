@@ -2,7 +2,7 @@
 
 OpenReview MCP — ML conference submissions and reviews (API v2)
 
-Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 673+ live data sources.
+Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1163+ live data sources.
 
 ## Tools
 
@@ -13,7 +13,7 @@ Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents 
 | `list_submissions` | Papers submitted to a venue. Pass the venue group id as venue_id. |
 | `get_note` | Single note — paper, review, comment, decision, etc. |
 | `get_paper` | Paper + all child notes (reviews, rebuttal, decision, metareview). Pass the forum id (= paper note id). |
-| `search_notes` | Full-text search across notes. |
+| `search_notes` | Full-text search across OpenReview notes (papers, reviews, decisions) by query string; optionally restrict to a content field (e.g. title, abstract) or filter by author signature; returns matching note ids, titles, and venues. |
 
 ## Quick Start
 
@@ -29,7 +29,7 @@ Add to your MCP client (Claude Desktop, Cursor, Windsurf, etc.):
 }
 ```
 
-Or connect to the full Pipeworx gateway for access to all 673+ data sources:
+Or connect to the full Pipeworx gateway for access to all 1163+ data sources:
 
 ```json
 {

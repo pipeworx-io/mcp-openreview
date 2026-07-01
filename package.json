@@ -1,6 +1,6 @@
 {
   "name": "@pipeworx/mcp-openreview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenReview MCP — ML conference submissions and reviews (API v2)",
   "type": "module",
   "main": "src/index.ts",
