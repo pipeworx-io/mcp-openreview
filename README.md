@@ -1,19 +1,28 @@
-# mcp-openreview
+# @pipeworx/openreview
 
-OpenReview MCP — ML conference submissions and reviews (API v2)
+OpenReview MCP — venue submissions + peer reviews for ML conferences (ICLR, NeurIPS, ICML, COLM, EMNLP, etc.). API v2.
 
-Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1163+ live data sources.
+Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1394+ live data sources.
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `list_venues` | List venue groups (conferences, workshops). Use the returned group id to query submissions. |
-| `get_venue` | Venue (group) metadata by group id. |
-| `list_submissions` | Papers submitted to a venue. Pass the venue group id as venue_id. |
-| `get_note` | Single note — paper, review, comment, decision, etc. |
-| `get_paper` | Paper + all child notes (reviews, rebuttal, decision, metareview). Pass the forum id (= paper note id). |
-| `search_notes` | Full-text search across OpenReview notes (papers, reviews, decisions) by query string; optionally restrict to a content field (e.g. title, abstract) or filter by author signature; returns matching note ids, titles, and venues. |
+- `list_venues(query?, limit?, offset?)` — list active and historical venues
+- `get_venue(group_id)` — group / venue metadata
+- `list_submissions(venue_id, sort?, status?, limit?, offset?)` — papers submitted to a venue
+- `get_note(id, details?)` — individual note (paper, review, comment, decision)
+- `get_paper(forum_id)` — paper + all its threads (reviews, rebuttal, decision)
+- `search_notes(query, content_field?, signature?, limit?, offset?)` — full-text search
+
+## Auth
+
+Public reads are keyless. Some endpoints (private invitations, restricted venues) need a token — optional:
+
+- **Platform key (optional):** gateway env `PLATFORM_OPENREVIEW_TOKEN`
+- **BYO (optional):** `?_apiKey=<token>` after logging in at openreview.net and grabbing a token
+
+## Data source
+
+`https://api2.openreview.net/` — v2 (also `https://api.openreview.net/` v1 for legacy venues).
 
 ## Quick Start
 
@@ -29,7 +38,7 @@ Add to your MCP client (Claude Desktop, Cursor, Windsurf, etc.):
 }
 ```
 
-Or connect to the full Pipeworx gateway for access to all 1163+ data sources:
+Or connect to the full Pipeworx gateway for access to all 1394+ data sources:
 
 ```json
 {
@@ -53,7 +62,7 @@ The gateway picks the right tool and fills the arguments automatically.
 
 ## More
 
-- [All tools and guides](https://github.com/pipeworx-io/examples)
+- [Docs and guides](https://pipeworx.io/docs)
 - [pipeworx.io](https://pipeworx.io)
 
 ## License
