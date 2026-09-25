@@ -2,16 +2,35 @@
 
 OpenReview MCP — venue submissions + peer reviews for ML conferences (ICLR, NeurIPS, ICML, COLM, EMNLP, etc.). API v2.
 
-Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1476+ live data sources.
+Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1679+ live data sources.
 
 ## Tools
 
 - `list_venues(query?, limit?, offset?)` — list active and historical venues
 - `get_venue(group_id)` — group / venue metadata
-- `list_submissions(venue_id, sort?, status?, limit?, offset?)` — papers submitted to a venue
+- `list_submissions(venue_id, query, limit?, offset?)` — papers in a venue matching a topic
 - `get_note(id, details?)` — individual note (paper, review, comment, decision)
 - `get_paper(forum_id)` — paper + all its threads (reviews, rebuttal, decision)
-- `search_notes(query, content_field?, signature?, limit?, offset?)` — full-text search
+- `search_notes(query, content_field?, signature?, venue_id?, limit?, offset?)` — full-text search, optionally scoped to one venue
+
+## Upstream limitation: the `/notes` read path is challenged
+
+Verified 2026-09-01. `GET /notes?...` on both `api2.openreview.net` and the v1
+host answers **403 `ChallengeRequiredError`** for every automated client — from
+Cloudflare egress and from an ordinary laptop alike, with any User-Agent, and
+with or without a token. `/groups` and `/notes/search` are unaffected.
+
+What that means per tool:
+
+| Tool | Path | Status |
+|---|---|---|
+| `list_venues`, `get_venue` | `/groups` | works |
+| `search_notes` | `/notes/search` | works |
+| `list_submissions` | `/notes/search` (was `/notes`) | works **with** a `query`; a topic-less listing of a whole venue is no longer available to automated clients |
+| `get_note`, `get_paper` | `/notes` | **blocked** — returns `upstream_down:` naming the challenge. Read the paper at `https://openreview.net/forum?id=<forum_id>`, or find it via `search_notes` |
+
+No API key clears the challenge, so a failure here is deliberately *not*
+reported as a credential problem.
 
 ## Auth
 
@@ -68,9 +87,45 @@ directly, instead of just this one's:
 }
 ```
 
-Both URLs reach the same gateway and the same 1476+ data sources. The
+Both URLs reach the same gateway and the same 1679+ data sources. The
 only difference is which pack's tools are listed **directly**; `ask_pipeworx`
 reaches all of them from either one.
+
+## No MCP client? Call it over HTTP
+
+```bash
+curl -X POST https://gateway.pipeworx.io/v1/tools/list_venues \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"ICLR"}'
+```
+
+No account needed for the first calls. Inspect any tool: `GET https://gateway.pipeworx.io/v1/tools/list_venues`. Find one: `POST https://gateway.pipeworx.io/v1/tools/search_packs` with `{"query":"..."}`.
+
+## Standalone (no gateway account)
+
+This package also runs as a local stdio MCP server — no Pipeworx account, no
+gateway round-trip:
+
+```json
+{
+  "mcpServers": {
+    "openreview": {
+      "command": "npx",
+      "args": ["-y", "@pipeworx/mcp-openreview"]
+    }
+  }
+}
+```
+
+Or run it directly to confirm it starts:
+
+```bash
+npx -y @pipeworx/mcp-openreview
+```
+
+It speaks MCP over stdin/stdout and answers `initialize`/`tools/list`/`tools/call`
+for **only** this pack's tools — none of the shared meta-tools the gateway
+connection above adds. Same source, same tools, no ask_pipeworx routing.
 
 ## Using with ask_pipeworx
 
@@ -91,13 +146,3 @@ The gateway picks the right tool and fills the arguments automatically.
 ## License
 
 MIT
-
-## No MCP client? Call it over HTTP
-
-```bash
-curl -X POST https://gateway.pipeworx.io/v1/tools/list_venues \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"ICLR"}'
-```
-
-No account needed for the first calls. Inspect any tool: `GET https://gateway.pipeworx.io/v1/tools/list_venues`. Find one: `POST https://gateway.pipeworx.io/v1/tools/search_packs` with `{"query":"..."}`.
