@@ -1,6 +1,6 @@
 {
   "name": "@pipeworx/mcp-openreview",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "OpenReview MCP — ML conference submissions and reviews (API v2)",
   "type": "module",
   "main": "src/index.ts",
@@ -26,7 +26,7 @@
     "@cloudflare/workers-types": "^4.20260405.1"
   },
   "pipeworx": {
-    "sourceHash": "v1-b8d2b478aa5ffa542ce53a28d2b6cd23c2eb40bc4159dc4538fc5aa4319fbf41",
-    "sourceCommit": "97740c6ee04c8acbfe7dddcacfde9e88ff2b9ca0"
+    "sourceHash": "v1-388bac4c9131b3a5b1e6c6d40ecdebbbab35824785fbe9e555a56330e0c5d57e",
+    "sourceCommit": "f54ad77e789f27fe393978f9c080b5b18c87bb4f"
   }
 }
